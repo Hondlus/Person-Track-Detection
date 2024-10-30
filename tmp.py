@@ -2,6 +2,7 @@ import cv2
 from ultralytics import YOLO
 from collections import defaultdict
 import numpy as np
+import matplotlib.path as mplPath
 
 
 model = YOLO('./weights/yolo11x.pt')    ### Pre-trained weights
@@ -23,28 +24,44 @@ output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h), isColor=T
 up_count = 0
 down_count = 0
 offset = 0
-cy1 = 510
+# cy1 = pt1[1]
+# cy2 = pt2[1]
 vh_down = []
 counter = []
 vh_up = []
 counter2 = []
+detections = 0
+POLYGON_UP = np.array([
+    [0, 0], # 左上
+    [1920, 0], # 右上
+    [1920, 800], # 右下
+    [0, 310], # 左下
+])
+POLYGON_DOWN = np.array([
+    [0, 330], # 左上
+    [1920, 820], # 右上
+    [1920, 1080], # 右下
+    [0, 1080], # 左下
+])
 
-def is_crossing():
+
+def is_crossing(xc, yc):
     #####going DOWN#####
-    if cy1 > (y + offset):
+    if mplPath.Path(POLYGON_UP).contains_point((xc, yc)):
         vh_down.append(track_id)
     if track_id in vh_down:
-        if cy1 < (y - offset):
+        if mplPath.Path(POLYGON_DOWN).contains_point((xc, yc)):
             if counter.count(track_id) == 0:
                 counter.append(track_id)
 
     #####going UP#####
-    if cy1 < (y - offset):
+    if mplPath.Path(POLYGON_DOWN).contains_point((xc, yc)):
         vh_up.append(track_id)
     if track_id in vh_up:
-        if cy1 > (y + offset):
+        if mplPath.Path(POLYGON_UP).contains_point((xc, yc)):
             if counter2.count(track_id) == 0:
                 counter2.append(track_id)
+
 
 # Loop through the video frames
 while cap.isOpened():
@@ -74,11 +91,14 @@ while cap.isOpened():
             points = np.hstack(track).astype(np.int32).reshape((-1, 1, 2))
             cv2.polylines(annotated_frame, [points], isClosed=False, color=(0, 255, 255), thickness=5)
 
-            # 越线检测
-            is_crossing()
+            # 判断行人是否跨越区域
+            is_crossing(x, y)
 
-        cv2.line(annotated_frame, (0, cy1), (w, cy1), (0, 0, 255), 3)
-        cv2.putText(annotated_frame, ('L1'), (182, cy1), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
+        # cv2.putText(img=annotated_frame, text=f"Persons: {detections}", org=(100, 100), fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=3, color=(0, 0, 0), thickness=3)
+        cv2.polylines(img=annotated_frame, pts=[POLYGON_UP], isClosed=True, color=(255, 0, 255), thickness=4)
+        cv2.polylines(img=annotated_frame, pts=[POLYGON_DOWN], isClosed=True, color=(255, 255, 0), thickness=4)
+        # cv2.line(annotated_frame, (pt1[0], pt1[1]), (pt2[0], pt2[1]), (0, 0, 255), 3)
+        # cv2.putText(annotated_frame, ('L1'), (182, cy1), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
 
         d = (len(counter))
         u = (len(counter2))

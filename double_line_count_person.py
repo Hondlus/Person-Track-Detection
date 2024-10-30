@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 
 
-model = YOLO('./weights/yolov8x.pt')    ### Pre-trained weights
+model = YOLO('./weights/yolo11x.pt')    ### Pre-trained weights
 
 # Store the track history
 track_history = defaultdict(lambda: [])
@@ -21,7 +21,7 @@ fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
 output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h), isColor=True)  # 创建一个VideoWriter对象用于写视频
 
 count = 0
-offset = 10
+offset = 6
 # cy1 = int(h / 2)
 # cy2 = cy1 + 20
 cy1 = 500
