@@ -11,6 +11,7 @@ track_history = defaultdict(lambda: [])
 
 # Open the video file
 video_path = "./test_video/MOT-0.mp4"
+video_path = 0
 cap = cv2.VideoCapture(video_path)
 
 # Write the video file
