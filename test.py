@@ -33,20 +33,22 @@ vh_up = []
 counter2 = []
 # 多边形坐标
 POLYGON_UP = np.array([
-    [450, 230], # 左上
-    [500, 230], # 右上
-    [500, 360], # 右下
-    [450, 360], # 左下
+    [220, 0], # 左上
+    [430, 0], # 右上
+    [430, 480], # 右下
+    [220, 480], # 左下
 ])
 POLYGON_DOWN = np.array([
-    [0, 130], # 左上
-    [220, 150], # 右上
-    [220, 345], # 右下
-    [290, 355], # 左下
-    [290, 150],  # 左上
-    [640, 150],  # 右上
-    [640, 360],  # 右下
-    [0, 360],  # 左下
+    [0, 0], # 左上
+    [210, 0], # 右上
+    [210, 480], # 右下
+    [0, 480], # 左下
+])
+POLYGON_DOWN2 = np.array([
+    [440, 0],  # 左上
+    [640, 0],  # 右上
+    [640, 480],  # 右下
+    [440, 480],  # 左下
 ])
 
 # 是否穿越区域
@@ -61,7 +63,7 @@ def is_crossing(xc, yc):
                 counter.append(track_id)
 
     #####going UP#####
-    if mplPath.Path(POLYGON_DOWN).contains_point((xc, yc)):
+    if mplPath.Path(POLYGON_DOWN).contains_point((xc, yc)) or mplPath.Path(POLYGON_DOWN2).contains_point((xc, yc)):
         vh_up.append(track_id)
     if track_id in vh_up:
         if mplPath.Path(POLYGON_UP).contains_point((xc, yc)):
@@ -76,6 +78,7 @@ while cap.isOpened():
 
     cv2.polylines(img=frame, pts=[POLYGON_UP], isClosed=True, color=(255, 0, 255), thickness=4)
     cv2.polylines(img=frame, pts=[POLYGON_DOWN], isClosed=True, color=(255, 255, 0), thickness=4)
+    cv2.polylines(img=frame, pts=[POLYGON_DOWN2], isClosed=True, color=(255, 255, 0), thickness=4)
 
     # tm.start()
     if success:
