@@ -82,10 +82,6 @@ while cap.isOpened():
     # Read a frame from the video
     success, frame = cap.read()
 
-    cv2.polylines(img=frame, pts=[POLYGON_1], isClosed=True, color=(255, 0, 255), thickness=4)
-    cv2.polylines(img=frame, pts=[POLYGON_2], isClosed=True, color=(255, 255, 0), thickness=4)
-    # cv2.polylines(img=frame, pts=[POLYGON_2_2], isClosed=True, color=(255, 255, 0), thickness=4)
-
     # tm.start()
     if success:
         # Run YOLO11 tracking on the frame, persisting tracks between frames
@@ -112,6 +108,10 @@ while cap.isOpened():
 
                 # 判断行人是否跨越区域
                 is_crossing(x, y)
+
+        cv2.polylines(img=frame, pts=[POLYGON_1], isClosed=True, color=(255, 0, 255), thickness=4)
+        cv2.polylines(img=frame, pts=[POLYGON_2], isClosed=True, color=(255, 255, 0), thickness=4)
+        # cv2.polylines(img=frame, pts=[POLYGON_2_2], isClosed=True, color=(255, 255, 0), thickness=4)
 
         cv2.putText(frame, 'IN: ' + str(len(counter_1)), (20, 90), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0),2)
         # font.putText(frame, 'INPUT: ' + str(len(counter_1)), (20, 90), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0),2)
