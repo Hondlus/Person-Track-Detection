@@ -3,7 +3,6 @@ from ultralytics import YOLO
 from collections import defaultdict
 import numpy as np
 import matplotlib.path as mplPath
-import codecs
 
 
 model = YOLO('./weights/yolo11n.pt')    ### Pre-trained weights
@@ -32,8 +31,6 @@ vh_1 = []
 counter_1 = []
 vh_2 = []
 counter_2 = []
-# font_path = 'path/to/your/font.ttf'  # 替换为你的字体文件路径
-# font = cv2.freetype.createFreeType2(font_path)
 
 # 多边形坐标  高清 x:795、950 标清 x:260、320
 POLYGON_1 = np.array([
