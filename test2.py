@@ -27,29 +27,25 @@ output_video_path = "C:/Users/DXW/Desktop/yolo_track_reid/output_video/test.mp4"
 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
 output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h), isColor=True)  # 创建一个VideoWriter对象用于写视频
 
-# vh_1 = []
-vh_1 = set()
-counter_1_list = []
-counter_1 = set()
-# vh_2 = []
-vh_2 = set()
-counter_2_list = []
-counter_2 = set()
+vh_1 = []
+counter_1 = []
+vh_2 = []
+counter_2 = []
 in_count = 0
 out_count = 0
 
 # 多边形坐标  高清 x:795、950 标清 x:260、320
 POLYGON_1 = np.array([
     [0, 0], # 左上
-    [340, 0], # 右上
-    [340, 480], # 右下
-    [0, 480], # 左下
+    [440, 0], # 右上
+    [440, 360], # 右下
+    [0, 360], # 左下
 ])
 POLYGON_2 = np.array([
-    [350, 0], # 左上
+    [460, 0], # 左上
     [640, 0], # 右上
-    [640, 480], # 右下
-    [350, 480], # 左下
+    [640, 360], # 右下
+    [460, 360], # 左下
 ])
 # POLYGON_2_2 = np.array([
 #     [325, 0],  # 左上
@@ -63,19 +59,26 @@ def is_crossing(xc, yc):
     global in_count, out_count
     #####going DOWN#####
     # mplPath.Path(POLYGON_1).contains_point((xc, yc)判断中心点是否在区域内
-    if mplPath.Path(POLYGON_1).contains_point((xc, yc)):
-        vh_1.add(track_id)
+    if mplPath.Path(POLYGON_2).contains_point((xc, yc)):
+        vh_1.append(track_id)
     if track_id in vh_1:
-        if mplPath.Path(POLYGON_2).contains_point((xc, yc)):
-            counter_2.add(track_id)
+        counter_1.append(mplPath.Path(POLYGON_1).contains_point((xc, yc)))
+        if counter_1 == [True]:
+            in_count += 1
+        if set(counter_1) == {mplPath.Path(POLYGON_2).contains_point((xc, yc)), False} or set(counter_1) == {False, mplPath.Path(POLYGON_2).contains_point((xc, yc))}:
+            counter_1.clear()
 
     #####going UP#####
-    if mplPath.Path(POLYGON_2).contains_point((xc, yc)):
-        vh_2.add(track_id)
+    if mplPath.Path(POLYGON_1).contains_point((xc, yc)):
+        vh_2.append(track_id)
     if track_id in vh_2:
-        if mplPath.Path(POLYGON_1).contains_point((xc, yc)):
-            counter_1.add(track_id)
+        counter_2.append(mplPath.Path(POLYGON_2).contains_point((xc, yc)))
+        if counter_2 == [True]:
+            out_count += 1
+        if set(counter_2) == {mplPath.Path(POLYGON_1).contains_point((xc, yc)), False} or set(counter_2) == {False, mplPath.Path(POLYGON_1).contains_point((xc, yc))}:
+            counter_2.clear()
 
+    return in_count, out_count
 
 # tm = cv2.TickMeter()
 # Loop through the video frames
@@ -108,16 +111,16 @@ while cap.isOpened():
                 cv2.polylines(frame, [points], isClosed=False, color=(0, 255, 255), thickness=5)
 
                 # 判断行人是否跨越区域
-                is_crossing(x, y)
+                in_count, out_count = is_crossing(x, y)
 
         cv2.polylines(img=frame, pts=[POLYGON_1], isClosed=True, color=(255, 0, 255), thickness=4)
         cv2.polylines(img=frame, pts=[POLYGON_2], isClosed=True, color=(255, 255, 0), thickness=4)
         # cv2.polylines(img=frame, pts=[POLYGON_2_2], isClosed=True, color=(255, 255, 0), thickness=4)
 
-        cv2.putText(frame, 'IN: ' + str(len(counter_1)), (20, 90), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0),2)
-        # font.putText(frame, 'INPUT: ' + str(len(counter_1)), (20, 90), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0),2)
-        cv2.putText(frame, 'OUT: ' + str(len(counter_2)), (20, 60), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
-        # font.putText(frame, 'OUT: ' + str(len(counter_2)), (20, 60), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
+        # cv2.putText(frame, 'IN: ' + str(len(counter_1)), (20, 90), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0),2)
+        cv2.putText(frame, 'INPUT: ' + str(in_count), (20, 90), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0),2)
+        # cv2.putText(frame, 'OUT: ' + str(len(counter_2)), (20, 60), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
+        cv2.putText(frame, 'OUT: ' + str(out_count), (20, 60), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
 
         # Write the video frame
         output_video.write(frame)
