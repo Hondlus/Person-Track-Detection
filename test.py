@@ -27,8 +27,6 @@ output_video_path = "C:/Users/DXW/Desktop/yolo_track_reid/output_video/test.mp4"
 fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
 output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h), isColor=True)  # 创建一个VideoWriter对象用于写视频
 
-red_list = []
-blue_list = []
 red_region = set()
 blue_region = set()
 in_count = 0
@@ -53,38 +51,6 @@ BLUE_POLYGON = np.array([
 #     [640, 360],  # 右下
 #     [325, 360],  # 左下
 # ])
-
-# 是否穿越区域
-def is_crossing(xc, yc):
-    if mplPath.Path(RED_POLYGON).contains_point((xc, yc)):
-        red_region.add(track_id)
-    if mplPath.Path(BLUE_POLYGON).contains_point((xc, yc)):
-        blue_region.add(track_id)
-    return red_region, blue_region
-
-    # global in_count, out_count
-    # #####going DOWN#####
-    # if mplPath.Path(RED_POLYGON).contains_point((xc, yc)):
-    #     red_region.add(track_id)
-    #     red_list.append(track_id)
-    #     if track_id in red_region and track_id not in blue_region:
-    #         pass
-    #     elif track_id in red_region and track_id in blue_region:
-    #         if red_list == [track_id]:
-    #             out_count += 1
-    #     else:
-    #         red_region.remove(track_id)
-    #
-    # if mplPath.Path(BLUE_POLYGON).contains_point((xc, yc)):
-    #     blue_region.add(track_id)
-    #     if track_id in blue_region and track_id not in red_region:
-    #         pass
-    #     elif track_id in blue_region and track_id in red_region:
-    #         if blue_list == [track_id]:
-    #             in_count += 1
-    #     else:
-    #         blue_region.remove(track_id)
-    #         blue_list.remove(track_id)
 
 # tm = cv2.TickMeter()
 # Loop through the video frames
@@ -117,21 +83,24 @@ while cap.isOpened():
                 cv2.polylines(frame, [points], isClosed=False, color=(0, 255, 255), thickness=5)
 
                 # 判断行人在哪个区域内，是否跨越区域
-                red_set, blue_set = is_crossing(x, y)
+                if mplPath.Path(RED_POLYGON).contains_point((x, y)):
+                    red_region.add(track_id)
+                if mplPath.Path(BLUE_POLYGON).contains_point((x, y)):
+                    blue_region.add(track_id)
 
-            if track_id in red_set:
-                if track_id not in blue_set:
+            if track_id in red_region:
+                if track_id not in blue_region:
                     pass
-                if track_id in blue_set:
+                if track_id in blue_region:
                     out_count += 1
-                    red_set.remove(track_id)
+                    red_region.remove(track_id)
 
-            if track_id in blue_set:
-                if track_id not in red_set:
+            if track_id in blue_region:
+                if track_id not in red_region:
                     pass
-                if track_id in red_set:
+                if track_id in red_region:
                     in_count += 1
-                    blue_set.remove(track_id)
+                    blue_region.remove(track_id)
 
 
         # Draw the polygon on the frame
