@@ -3,6 +3,7 @@ from ultralytics import YOLO
 from collections import defaultdict
 import numpy as np
 import matplotlib.path as mplPath
+from datetime import datetime
 
 
 model = YOLO('./weights/yolo11n.pt')    ### Pre-trained weights
@@ -12,9 +13,9 @@ track_history = defaultdict(lambda: [])
 
 # Open the video file
 # video_path = "./test_video/test.mp4"
-video_path = 0
+# video_path = 0
 # video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/101" # 外走廊高清  1920 1080
-# video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/102" # 外走廊标清 640 360
+video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/102" # 外走廊标清 640 360
 # video_path = "rtsp://admin:HikNJQXFP@192.168.50.10:554/Streaming/Channels/102" # 屋内大屏摄像头
 # video_path = "rtsp://admin:Dxw202409@192.168.50.20:554/stream2"  # 15fps 640 480
 cap = cv2.VideoCapture(video_path)
@@ -74,17 +75,21 @@ def is_crossing(x_center, y_center):
 # tm = cv2.TickMeter()
 # Loop through the video frames
 while cap.isOpened():
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Read a frame from the video
     success, frame = cap.read()
 
     # tm.start()
     if success:
         # Run YOLO11 tracking on the frame, persisting tracks between frames
+        # results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0], device='cpu')
         results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0], device=0)
         # print(results[0].boxes.is_track)
         if results[0].boxes.is_track is True:
             # Get the boxes and track IDs
+            # boxes = results[0].boxes.xywh.cpu()
             boxes = results[0].boxes.xywh.cuda()
+            # track_ids = results[0].boxes.id.int().cpu().tolist()
             track_ids = results[0].boxes.id.int().cuda().tolist()
 
             # Visualize the results on the frame
@@ -104,6 +109,7 @@ while cap.isOpened():
                 # 判断行人在哪个区域，是否跨越区域
                 in_count, out_count = is_crossing(x, y)
 
+        cv2.putText(frame, current_time, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         # Draw the polygon on the frame
         cv2.polylines(img=frame, pts=[RED_POLYGON], isClosed=True, color=(255, 0, 255), thickness=4)
         cv2.polylines(img=frame, pts=[BLUE_POLYGON], isClosed=True, color=(255, 255, 0), thickness=4)
