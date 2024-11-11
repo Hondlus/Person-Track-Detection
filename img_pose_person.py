@@ -6,7 +6,7 @@ import math
 from PIL import Image, ImageDraw, ImageFont
 
 
-def determine_pose(keypoint_list):
+def determine_pose(keypoints):
     """
     通过关键点判断人体的姿态
     :param keypoints: 关键点坐标和置信度，格式为 [(x1, y1, conf1), (x2, y2, conf2), ...]
@@ -118,82 +118,37 @@ if __name__ == '__main__':
 
     model = YOLO('./weights/yolo11n-pose.pt')  ### Pre-trained weights
 
-    # Store the track history
-    track_history = defaultdict(lambda: [])
-
-    # Open the video file
-    # video_path = "./test_video/test.mp4"
-    # video_path = 0
-    # video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/101" # 外走廊高清  1920 1080
-    video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/102" # 外走廊标清 640 360
-    # video_path = "rtsp://admin:HikNJQXFP@192.168.50.10:554/Streaming/Channels/102" # 屋内大屏摄像头
-    # video_path = "rtsp://admin:Dxw202409@192.168.50.20:554/stream2"  # 15fps 640 480
-    cap = cv2.VideoCapture(video_path)
+    frame = cv2.imread("./images/tiao.png")
 
     # Write the video file
-    fps = cap.get(cv2.CAP_PROP_FPS)  # 获取视频的帧率 640 x 360
-    w, h = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))  # 获取视频的分辨率（宽度和高度）
-    print("fps, w, h: ", fps, w, h)
-    output_video_path = "C:/Users/DXW/Desktop/yolo_track_reid/output_video/test.mp4"  # 设置输出视频的保存路径
-    fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
-    output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h), isColor=True)  # 创建一个VideoWriter对象用于写视频
+    # fps = cap.get(cv2.CAP_PROP_FPS)  # 获取视频的帧率 640 x 360
+    # w, h = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))  # 获取视频的分辨率（宽度和高度）
+    # print("fps, w, h: ", fps, w, h)
+    # output_video_path = "C:/Users/DXW/Desktop/yolo_track_reid/output_video/test.mp4"  # 设置输出视频的保存路径
+    # fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
+    # output_video = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h), isColor=True)  # 创建一个VideoWriter对象用于写视频
 
-    # Loop through the video frames
-    while cap.isOpened():
+    results = model.predict(frame, classes=[0], device=0)
 
-        # 获取当前系统时间
-        # current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # Read a frame from the video
-        success, frame = cap.read()
+    # Get the boxes and track IDs and keypoints
+    boxes = results[0].boxes.xywh.cuda()
+    keypoints = results[0].keypoints.data.cuda()
 
-        if success:
-            # Run YOLO11 tracking on the frame, persisting tracks between frames
-            results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0], device=0)
+    # Visualize the results on the frame
+    frame = results[0].plot(conf=False)
 
-            if results[0].boxes.is_track is True:
-                # Get the boxes and track IDs and keypoints
-                boxes = results[0].boxes.xywh.cuda()
-                track_ids = results[0].boxes.id.int().cuda().tolist()
-                keypoints = results[0].keypoints.xy.cuda().tolist()
+    for box, keypoint in zip(boxes, keypoints):
+        # box: tensor
+        x, y, box_w, box_h = box
 
-                # Visualize the results on the frame
-                frame = results[0].plot(conf=False)
+        # 根据人体关键点判断姿态
+        pose = determine_pose(keypoint)
 
-                for box, track_id, keypoint in zip(boxes, track_ids, keypoints):
-                    # box: tensor
-                    x, y, box_w, box_h = box
-                    track = track_history[track_id]
-                    track.append((float(x), float(y)))  # x, y center point
-                    if len(track) > 30:  # retain 90 tracks for 90 frames
-                        track.pop(0)
+        frame = draw_chinese_text(frame, pose, (50, 50), "./STSONG.TTF", 24, (0, 255, 0))
 
-                    # Draw the tracking lines
-                    points = np.hstack(track).astype(np.int32).reshape((-1, 1, 2))
-                    cv2.polylines(frame, [points], isClosed=False, color=(0, 255, 255), thickness=5)
+    # Display the annotated frame
+    cv2.imshow("Posing", frame)
 
-                    # 根据人体关键点判断姿态
-                    pose = determine_pose(keypoint)
-                    print("pose: ", pose)
-
-                    # frame = draw_chinese_text(frame, pose, (50, 50), "./STSONG.TTF", 24, (0, 255, 0))
-
-            # 实时显示系统时间
-            # cv2.putText(frame, current_time, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-
-            # Write the video frame
-            output_video.write(frame)
-
-            # Display the annotated frame
-            cv2.imshow("Tracking", frame)
-
-            # Break the loop if 'q' is pressed
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-        else:
-            # Break the loop if the end of the video is reached
-            break
-
-    # Release the video capture object and close the display window
-    output_video.release()
-    cap.release()
+    # Break the loop if 'q' is pressed
+    cv2.waitKey(0)
     cv2.destroyAllWindows()

@@ -6,7 +6,7 @@ import math
 from PIL import Image, ImageDraw, ImageFont
 
 
-def determine_pose(keypoint_list):
+def determine_pose(keypoints):
     """
     通过关键点判断人体的姿态
     :param keypoints: 关键点坐标和置信度，格式为 [(x1, y1, conf1), (x2, y2, conf2), ...]
@@ -154,7 +154,7 @@ if __name__ == '__main__':
                 # Get the boxes and track IDs and keypoints
                 boxes = results[0].boxes.xywh.cuda()
                 track_ids = results[0].boxes.id.int().cuda().tolist()
-                keypoints = results[0].keypoints.xy.cuda().tolist()
+                keypoints = results[0].keypoints.data.cuda()
 
                 # Visualize the results on the frame
                 frame = results[0].plot(conf=False)
@@ -173,6 +173,7 @@ if __name__ == '__main__':
 
                     # 根据人体关键点判断姿态
                     pose = determine_pose(keypoint)
+                    # print("pose: ", pose)
 
                     frame = draw_chinese_text(frame, pose, (50, 50), "./STSONG.TTF", 24, (0, 255, 0))
 
