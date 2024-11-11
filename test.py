@@ -6,7 +6,7 @@ import matplotlib.path as mplPath
 from datetime import datetime
 
 
-model = YOLO('./weights/yolo11n.pt')    ### Pre-trained weights
+model = YOLO('./weights/yolo11n-pose.pt')    ### Pre-trained weights
 
 # Store the track history
 track_history = defaultdict(lambda: [])
@@ -75,6 +75,8 @@ def is_crossing(x_center, y_center):
 # tm = cv2.TickMeter()
 # Loop through the video frames
 while cap.isOpened():
+
+    # 获取当前系统时间
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Read a frame from the video
     success, frame = cap.read()
@@ -109,6 +111,7 @@ while cap.isOpened():
                 # 判断行人在哪个区域，是否跨越区域
                 in_count, out_count = is_crossing(x, y)
 
+        # 实时显示系统时间
         cv2.putText(frame, current_time, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         # Draw the polygon on the frame
         cv2.polylines(img=frame, pts=[RED_POLYGON], isClosed=True, color=(255, 0, 255), thickness=4)
