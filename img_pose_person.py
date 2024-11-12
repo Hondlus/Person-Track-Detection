@@ -135,7 +135,7 @@ if __name__ == '__main__':
     keypoints = results[0].keypoints.data.cuda()
 
     # Visualize the results on the frame
-    frame = results[0].plot(conf=False)
+    frame = results[0].plot(conf=False, kpt_radius=1)
 
     for box, keypoint in zip(boxes, keypoints):
         # box: tensor
@@ -144,7 +144,7 @@ if __name__ == '__main__':
         # 根据人体关键点判断姿态
         pose = determine_pose(keypoint)
 
-        frame = draw_chinese_text(frame, pose, (50, 50), "./STSONG.TTF", 24, (0, 255, 0))
+        frame = draw_chinese_text(frame, pose, (int(x-box_w/2), int(y-box_h/2)), "./STSONG.TTF", 14, (255, 0, 0))
 
     # Display the annotated frame
     cv2.imshow("Posing", frame)
