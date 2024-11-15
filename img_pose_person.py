@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     model = YOLO('./weights/yolo11n-pose.pt')  ### Pre-trained weights
 
-    frame = cv2.imread("./images/tiao.png")
+    frame = cv2.imread("./test_video/tiao.png")
 
     # Write the video file
     # fps = cap.get(cv2.CAP_PROP_FPS)  # 获取视频的帧率 640 x 360

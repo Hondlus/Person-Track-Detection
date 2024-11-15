@@ -6,16 +6,16 @@ import matplotlib.path as mplPath
 from datetime import datetime
 
 
-model = YOLO('./weights/yolo11n-pose.pt')    ### Pre-trained weights
+model = YOLO('./weights/yolo11n.pt')    ### Pre-trained weights
 
 # Store the track history
 track_history = defaultdict(lambda: [])
 
 # Open the video file
 # video_path = "./test_video/test.mp4"
-# video_path = 0
+video_path = 0
 # video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/101" # 外走廊高清  1920 1080
-video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/102" # 外走廊标清 640 360
+# video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/102" # 外走廊标清 640 360
 # video_path = "rtsp://admin:HikNJQXFP@192.168.50.10:554/Streaming/Channels/102" # 屋内大屏摄像头
 # video_path = "rtsp://admin:Dxw202409@192.168.50.20:554/stream2"  # 15fps 640 480
 cap = cv2.VideoCapture(video_path)
@@ -85,7 +85,7 @@ while cap.isOpened():
     if success:
         # Run YOLO11 tracking on the frame, persisting tracks between frames
         # results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0], device='cpu')
-        results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0], device=0)
+        results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0, 67], device=0)
         # print(results[0].boxes.is_track)
         if results[0].boxes.is_track is True:
             # Get the boxes and track IDs

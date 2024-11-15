@@ -14,7 +14,7 @@ def determine_pose(keypoints):
     """
     # 如果关键点数量少于17个，直接返回'unknown'
     if len(keypoints) < 17:
-        return '无法判断'
+        return 'I dont known'
 
     # 定义一些关键点的索引
     left_ankle = keypoints[15]  # 左脚踝
@@ -76,19 +76,19 @@ def determine_pose(keypoints):
 
         # 如果左脚踝和右脚踝的 y 坐标都大于膝盖和髋关节的 y 坐标，并且膝盖之间的角度小于一定阈值，判定为站立
         if (flag_0 and flag_1 and flag_3):
-            return '站立'
+            return 'Stand'
 
         # 如果脚踝之间的距离大于膝盖之间的距离，判定为行走
         if flag_2:
-            return '行走'
+            return 'Walk'
 
         # 如果左脚踝和右脚踝的 y 坐标都大于髋关节的 y 坐标，并且膝盖之间的角度大于一定阈值，判定为跳跃
         if left_ankle_y > left_hip_y and right_ankle_y > right_hip_y:
             if knee_angle_left > 60 or knee_angle_right > 60:  # 设置角度阈值为160度
-                return '跳跃'
+                return 'Jump'
 
     # 如果以上条件都不满足，返回'unknown'
-    return '未知'
+    return 'Unknown'
 
 def draw_chinese_text(image, text, position, font_path, font_size, color):
     """
@@ -116,16 +116,16 @@ def draw_chinese_text(image, text, position, font_path, font_size, color):
 
 if __name__ == '__main__':
 
-    model = YOLO('./weights/yolo11n-pose.pt')  ### Pre-trained weights
+    model = YOLO('./weights/yolo11n.pt')  ### Pre-trained weights
 
     # Store the track history
     track_history = defaultdict(lambda: [])
 
     # Open the video file
     # video_path = "./test_video/test.mp4"
-    # video_path = 0
+    video_path = 0
     # video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/101" # 外走廊高清  1920 1080
-    video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/102" # 外走廊标清 640 360
+    # video_path = "rtsp://admin:HikFIATCT@192.168.50.11:554/Streaming/Channels/102" # 外走廊标清 640 360
     # video_path = "rtsp://admin:HikNJQXFP@192.168.50.10:554/Streaming/Channels/102" # 屋内大屏摄像头
     # video_path = "rtsp://admin:Dxw202409@192.168.50.20:554/stream2"  # 15fps 640 480
     cap = cv2.VideoCapture(video_path)
@@ -148,7 +148,7 @@ if __name__ == '__main__':
 
         if success:
             # Run YOLO11 tracking on the frame, persisting tracks between frames
-            results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0], device=0)
+            results = model.track(frame, persist=True, tracker="botsort.yaml", classes=[0, 67], device=0)
 
             if results[0].boxes.is_track is True:
                 # Get the boxes and track IDs and keypoints
@@ -175,7 +175,9 @@ if __name__ == '__main__':
                     pose = determine_pose(keypoint)
                     # print("pose: ", pose)
 
-                    frame = draw_chinese_text(frame, pose, (int(x-box_w/2), int(y-box_h/2)), "./STSONG.TTF", 12, (0, 255, 0))
+                    # 绘制人体行为状态
+                    # frame = draw_chinese_text(frame, pose, (int(x-box_w/2), int(y-box_h/2)), "./STSONG.TTF", 12, (0, 255, 0))
+                    cv2.putText(frame, pose, (int(x-box_w/2), int(y-box_h/2)), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
             # 实时显示系统时间
             # cv2.putText(frame, current_time, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
