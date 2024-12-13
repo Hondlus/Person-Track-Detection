@@ -1,4 +1,6 @@
 import os
+
+from pyparsing import oneOf
 from ultralytics import YOLO
 import cv2
 
@@ -20,19 +22,29 @@ if __name__ == '__main__':
     # 批量读取图片
     for img_name in os.listdir(img_path):
         img = cv2.imread(img_path + img_name)
-        # height, width, _ = img.shape
-        # print("img_h, img_w: ", height, width)
+        img_h, img_w, _ = img.shape
+        print("img_h, img_w: ", img_h, img_w)
 
         # Predict with the model
         results = model(img, classes=[0], device=0)  # predict on an image
         boxes = results[0].boxes.xywh.cuda()
         for box in boxes:
             x, y, box_w, box_h = box  # x,y center point
-            xmin = int(x) - int(box_w / 2)
-            ymin = int(y) - int(box_h / 2)
-            xmax = int(x) + int(box_w / 2)
-            ymax = int(y) + int(box_h / 2)
-            crop_img = img[ymin-offset:ymax+offset, xmin-offset:xmax+offset]
+            xmin = int(x) - int(box_w / 2) - offset
+            ymin = int(y) - int(box_h / 2) - offset
+            xmax = int(x) + int(box_w / 2) + offset
+            ymax = int(y) + int(box_h / 2) + offset
+            if xmin < 0:
+                xmin = 0
+            if ymin < 0:
+                ymin = 0
+            if xmax > img_w:
+                xmax = img_w
+            if ymax > img_h:
+                ymax = img_h
+            print(xmin, ymin, xmax, ymax)
+
+            crop_img = img[ymin:ymax, xmin:xmax]
             # 根据标注信息画框
             cv2.imshow('crop_img', crop_img)
 
