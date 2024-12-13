@@ -6,16 +6,17 @@ import cv2
 class_id = 0
 
 # 注意：路径最后要带斜杠
-img_path = "C:/Users/DXW/Desktop/yolo_train/datasets/sleep/images/train/"
+img_path = "C:/Users/DXW/Desktop/yolo_train/datasets/person/train/sleep/"
 # 存储图片的路径
-image_path = "C:/Users/DXW/Desktop/yolo_train/datasets/sleep/sleep/"
-image_path2 = "C:/Users/DXW/Desktop/yolo_train/datasets/sleep/play/"
+image_path = "C:/Users/DXW/Desktop/yolo_train/datasets/person/sleep/"
+image_path2 = "C:/Users/DXW/Desktop/yolo_train/datasets/person/play/"
 
 # Load a model
 model = YOLO("./weights/yolo11x.pt")  # load an official model
 
 if __name__ == '__main__':
     count = 0
+    offset = 20 # 截取图片的偏移
     # 批量读取图片
     for img_name in os.listdir(img_path):
         img = cv2.imread(img_path + img_name)
@@ -31,7 +32,7 @@ if __name__ == '__main__':
             ymin = int(y) - int(box_h / 2)
             xmax = int(x) + int(box_w / 2)
             ymax = int(y) + int(box_h / 2)
-            crop_img = img[ymin:ymax, xmin:xmax]
+            crop_img = img[ymin-offset:ymax+offset, xmin-offset:xmax+offset]
             # 根据标注信息画框
             cv2.imshow('crop_img', crop_img)
 
